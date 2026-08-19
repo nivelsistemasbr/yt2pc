@@ -4,6 +4,7 @@ __pycache__/
 *.pyo
 .pytest_cache/
 .mypy_cache/
+.cache/
 .venv/
 venv/
 
@@ -27,3 +28,6 @@ desktop.ini
 Thumbs.db
 .vscode/
 .idea/
+
+# Dependências locais do provedor de PO Token (recriadas pelo script de build)
+youtube_pot_provider/

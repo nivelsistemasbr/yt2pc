@@ -11,6 +11,7 @@ import queue
 import re
 import threading
 import os
+import shutil
 import sys
 import time
 from collections import deque
@@ -44,6 +45,25 @@ def bundled_ffmpeg_directory() -> Path | None:
     else:
         folder = Path(__file__).resolve().parent / "ffmpeg"
     return folder if (folder / "ffmpeg.exe").is_file() else None
+
+
+def bundled_node_path() -> Path | None:
+    """Localiza o runtime Node usado nos desafios atuais do YouTube."""
+    if getattr(sys, "frozen", False):
+        node_path = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent)) / "node" / "node.exe"
+        return node_path if node_path.is_file() else None
+    executable = shutil.which("node")
+    return Path(executable) if executable else None
+
+
+def pot_provider_directory() -> Path | None:
+    """Retorna o servidor local que gera PO Tokens para o YouTube."""
+    if getattr(sys, "frozen", False):
+        root = Path(getattr(sys, "_MEIPASS", Path(sys.executable).parent))
+    else:
+        root = Path(__file__).resolve().parent
+    folder = root / "youtube_pot_provider" / "server"
+    return folder if (folder / "build" / "generate_once.js").is_file() else None
 
 
 class DownloadCancelled(Exception):
@@ -114,9 +134,9 @@ def baixar_videos(
     """Baixa URLs e cria um TXT de título/descrição para cada mídia concluída."""
     destino = Path(pasta)
     destino.mkdir(parents=True, exist_ok=True)
-    # O texto da opção começa com "Somente áudio", e não com "Áudio".
-    # A verificação anterior fazia o modo MP3 baixar o melhor vídeo por engano.
-    audio_only = modo.startswith("Somente áudio")
+    # Evita depender da codificação do acento em "áudio". A verificação
+    # anterior fazia o modo MP3 baixar o melhor vídeo por engano.
+    audio_only = modo.lower().startswith("somente") and "mp3" in modo.lower()
     mp4_output = "MP4" in modo
     if audio_only:
         selected_format = "bestaudio/best"
@@ -149,6 +169,16 @@ def baixar_videos(
     ffmpeg_directory = bundled_ffmpeg_directory()
     if ffmpeg_directory:
         options["ffmpeg_location"] = str(ffmpeg_directory)
+    node_path = bundled_node_path()
+    provider_directory = pot_provider_directory()
+    if node_path and provider_directory:
+        # O YouTube passou a exigir um PO Token para parte dos downloads. O
+        # provedor local gera esse token por vídeo, sem usar credenciais do usuário.
+        options["js_runtimes"] = {"node": {"path": str(node_path)}}
+        options["extractor_args"] = {
+            "youtube": {"player_client": ["mweb"]},
+            "youtubepot-bgutilscript": {"server_home": [str(provider_directory)]},
+        }
     if audio_only:
         options["postprocessors"] = [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "0"}]
     elif mp4_output:

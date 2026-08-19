@@ -22,12 +22,13 @@ Vídeos longos e em alta resolução podem ter arquivos grandes. Por exemplo, um
 - Windows
 - Python 3.13 ou superior
 - FFmpeg e FFprobe em `C:\ffmpeg\bin`
+- Node.js 22 ou superior (usado para os desafios do YouTube)
 - Inno Setup 7 para gerar o instalador
 
 Instale a dependência Python:
 
 ```powershell
-python -m pip install -U yt-dlp pyinstaller
+python -m pip install -U "yt-dlp[default]" bgutil-ytdlp-pot-provider pyinstaller
 ```
 
 ## Executar pelo código-fonte
