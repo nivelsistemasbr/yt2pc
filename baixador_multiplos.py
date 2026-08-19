@@ -114,7 +114,9 @@ def baixar_videos(
     """Baixa URLs e cria um TXT de título/descrição para cada mídia concluída."""
     destino = Path(pasta)
     destino.mkdir(parents=True, exist_ok=True)
-    audio_only = modo.startswith("Áudio")
+    # O texto da opção começa com "Somente áudio", e não com "Áudio".
+    # A verificação anterior fazia o modo MP3 baixar o melhor vídeo por engano.
+    audio_only = modo.startswith("Somente áudio")
     mp4_output = "MP4" in modo
     if audio_only:
         selected_format = "bestaudio/best"
