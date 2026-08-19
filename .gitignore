@@ -1,0 +1,29 @@
+# Dependências e caches Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.venv/
+venv/
+
+# Artefatos de empacotamento
+build/
+dist/
+release/
+*.spec
+
+# Arquivos baixados e dados locais que não fazem parte do aplicativo
+downloads/
+CacheClip/
+Captures/
+Resolve Project Backups/
+AnyDesk/
+.gallery/
+desktop.ini
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
