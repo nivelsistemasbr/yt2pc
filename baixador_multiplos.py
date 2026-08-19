@@ -171,6 +171,7 @@ def baixar_videos(
         options["ffmpeg_location"] = str(ffmpeg_directory)
     node_path = bundled_node_path()
     provider_directory = pot_provider_directory()
+    original_path = None
     if node_path and provider_directory:
         # O YouTube passou a exigir um PO Token para parte dos downloads. O
         # provedor local gera esse token por vídeo, sem usar credenciais do usuário.
@@ -179,6 +180,11 @@ def baixar_videos(
             "youtube": {"player_client": ["mweb"]},
             "youtubepot-bgutilscript": {"server_home": [str(provider_directory)]},
         }
+        # O provedor também verifica runtimes opcionais. Alguns ambientes do
+        # Windows colocam pontos de montagem bloqueados no PATH; limitar a busca
+        # ao Node incluído evita que essa verificação falhe antes do download.
+        original_path = os.environ.get("PATH")
+        os.environ["PATH"] = str(node_path.parent)
     if audio_only:
         options["postprocessors"] = [{"key": "FFmpegExtractAudio", "preferredcodec": "mp3", "preferredquality": "0"}]
     elif mp4_output:
@@ -190,9 +196,13 @@ def baixar_videos(
     else:
         options["merge_output_format"] = "mkv"
 
-    with yt_dlp.YoutubeDL(options) as ydl:
-        ydl.add_post_processor(TextMetadataPostProcessor(), when="after_move")
-        return ydl.download(urls)
+    try:
+        with yt_dlp.YoutubeDL(options) as ydl:
+            ydl.add_post_processor(TextMetadataPostProcessor(), when="after_move")
+            return ydl.download(urls)
+    finally:
+        if original_path is not None:
+            os.environ["PATH"] = original_path
 
 
 class GuiLogger:
